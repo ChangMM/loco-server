@@ -15,7 +15,7 @@
     "stop": "pm2 stop ecosystem.config.js --env production",
     "restart": "pm2 restart ecosystem.config.js --env production",
     "reload": "pm2 reload ecosystem.config.js --env production",
-    "deploy": "docker-compose up --build -d"
+    "deploy": "docker-compose up --build -d --no-recreate"
   },
   "dependencies": {
     "@casl/ability": "^5.1.2",
