@@ -1,7 +1,7 @@
 version: '3'
-container_name: loco-server
 services:
   server:
     build: .
+    container_name: loco-server
     ports:
       - '5001:5001'
