@@ -70,10 +70,8 @@ export class User {
   deletedAt: Date
 
   @CreateDateColumn()
-  @Field()
   createdAt: Date
 
   @UpdateDateColumn()
-  @Field()
   updatedAt: Date
 }

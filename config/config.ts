@@ -25,7 +25,13 @@ class Config {
     },
 
     // 这些查询不需要登录
-    queryWhiteList: ['__schema', 'loginByPassword', 'registerByEmail', 'loginByEmail'],
+    queryWhiteList: [
+      '__schema',
+      'loginByPassword',
+      'registerByEmail',
+      'loginByEmail',
+      'loginByGithub',
+    ],
 
     // 对外(client)暴露的接口，默认 admin 全部可用
     clientWhiteList: [],

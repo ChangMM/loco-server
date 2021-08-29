@@ -83,24 +83,43 @@ export class AuthService {
     repos.visitRepository.save({ userId })
   }
 
+  private async initDataForNewUser(user: User): Promise<Visit> {
+    const repos = useRepositories()
+    const team = await this.teamService.initTeamDataForNewUser(user)
+    const userId = user.id
+    const [table, view] = await this.tableService.addTable({
+      id: nanoid(),
+      userId,
+      teamId: team.id,
+      name: 'Demo project',
+    })
+
+    const visit = await repos.visitRepository.save({
+      userId,
+      teamId: team.id,
+      tableId: table.id,
+      viewId: view.id,
+      viewType: view.type,
+    })
+    return visit
+  }
+
   async loginByGithub(code: string): Promise<LoginSuccessPayload> {
     const githubUser = await this.getGithubUser(code)
 
     const repos = useRepositories()
 
-    // 用户已存在，直接登录生产 token
     const userExist = await this.userRepository.findOne({ githubId: githubUser.id })
     // const userExist = await this.userRepository.findOne({ githubId: 2668081 })
 
+    // 用户已存在，直接登录生产 token
     if (userExist) {
       const { id: userId } = userExist
+      const visit = await repos.visitRepository.findOneOrFail({ userId })
+      const payload = this.authUtil.getLoginSuccessPayload(userExist, visit)
+
       this.emitter.emit('LoginSuccess', userExist)
-      return {
-        token: this.authUtil.generateToken(userId, UserType.user),
-        userId,
-        user: userExist,
-        visit: {} as any, // TODO:
-      }
+      return payload
     }
 
     /** 注册新用户 */
@@ -117,19 +136,12 @@ export class AuthService {
 
     this.emitter.emit('RegisterSuccess', user)
 
-    // const userWithTeamId = await this.initTeamDataForNewUser(user)
-
-    return {
-      token: this.authUtil.generateToken(user.id, UserType.user),
-      userId: user.id,
-      // user: userWithTeamId,
-      user,
-      visit: {} as any, // TODO:
-    }
+    const visit = await this.initDataForNewUser(user)
+    const payload = this.authUtil.getLoginSuccessPayload(user, visit)
+    return payload
   }
 
   async registerByEmail(input: RegisterByEmailInput): Promise<LoginSuccessPayload> {
-    let visit: Visit | undefined
     const { email } = input
     const repos = useRepositories()
 
@@ -149,26 +161,7 @@ export class AuthService {
       avatar: 'https://avatars.githubusercontent.com/u/2668081?v=4',
     })
 
-    const team = await this.teamService.initTeamDataForNewUser(user)
-
-    const userId = user.id
-    const [table, view] = await this.tableService.addTable({
-      id: nanoid(),
-      userId,
-      teamId: team.id,
-      name: 'Demo project',
-    })
-
-    visit = await repos.visitRepository.findOne({ userId })
-    if (!visit) {
-      visit = await repos.visitRepository.save({
-        userId,
-        teamId: team.id,
-        tableId: table.id,
-        viewId: view.id,
-        viewType: view.type,
-      })
-    }
+    const visit = await this.initDataForNewUser(user)
 
     const payload = this.authUtil.getLoginSuccessPayload(user, visit)
 
