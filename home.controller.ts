@@ -6,7 +6,7 @@ export class HomeController {
   // @Render('index')
   index() {
     return {
-      hello: 'hello world from loco',
+      hello: 'hello world from loco!',
     }
   }
 }
